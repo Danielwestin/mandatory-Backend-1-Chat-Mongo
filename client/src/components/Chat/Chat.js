@@ -16,13 +16,13 @@ export default function Chat(props) {
 				setRooms(response.data);
 			});
 			axios.get(`/user/${userId}`).then((response) => {
+				console.log(response.data.username);
+
 				setUsername(response.data.username);
 			});
 		},
 		[ userId ]
 	);
-
-	console.log(rooms);
 
 	return (
 		<React.Fragment>

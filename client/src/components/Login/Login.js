@@ -34,7 +34,7 @@ export default function Login(props) {
 
 	return (
 		<main className="Login">
-			{online.status && <Redirect to={'/' + online.id} />}
+			{online.status && <Redirect to={'/user/' + online.id} />}
 
 			<section className="Login__section">
 				<h1>Login</h1>

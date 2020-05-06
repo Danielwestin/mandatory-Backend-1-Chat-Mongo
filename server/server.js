@@ -31,6 +31,8 @@ app.post('/create', (req, res) => {
 					res.status(201).send(user);
 				})
 				.catch((e) => {
+					console.log('username already exists');
+
 					console.error(e);
 					res.status(500).end();
 				});
@@ -39,7 +41,12 @@ app.post('/create', (req, res) => {
 		case 'room':
 			const room = {
 				...req.body,
-				messages: []
+				messages: [
+					{
+						user: 'Admin',
+						content: 'Hello'
+					}
+				]
 			};
 
 			db
@@ -73,8 +80,8 @@ app.get('/rooms', (req, res) => {
 		});
 });
 
-app.get('/user/:id', (req, res) => {
-	const id = req.params.id;
+app.get('/user/:userId', async (req, res) => {
+	const id = req.params.userId;
 	const db = getDB();
 
 	db
@@ -84,6 +91,8 @@ app.get('/user/:id', (req, res) => {
 			res.status(200).send(user);
 		})
 		.catch((e) => {
+			console.log('ERROR IN GET USER ID');
+
 			console.error(e);
 			res.status(500).end();
 		});
@@ -104,7 +113,7 @@ app.get('/user/:userId/room/:roomId', (req, res) => {
 		});
 });
 
-app.delete('/room/:id', (req, res) => {
+app.delete('/room/:id', async (req, res) => {
 	const id = req.params.id;
 	const db = getDB();
 
@@ -118,6 +127,49 @@ app.delete('/room/:id', (req, res) => {
 			console.error(e);
 			res.status(500).end();
 		});
+});
+
+io.on('connection', (socket) => {
+	console.log('a user connected');
+	socket.on('join', ({ username, roomId }) => {
+		socket.join(roomId);
+
+		const adminMessage = {
+			user: 'Admin',
+			content: `${username}, welcome to the room`
+		};
+
+		socket.emit('message', adminMessage);
+		socket.broadcast.to(roomId).emit('message', {
+			user: 'Admin',
+			content: `${username} has joined`
+		});
+	});
+
+	socket.on('disconnect', () => {
+		console.log('A user just left!');
+	});
+
+	socket.on('new_message', ({ user, content, roomId }) => {
+		const message = {
+			user,
+			content
+		};
+		socket.to(roomId).emit('message', message);
+
+		// Rooms.saveMessage(roomId, message);
+		const db = getDB();
+		db
+			.collection('rooms')
+			.updateOne(
+				{ _id: createObjectId(roomId) },
+				{ $push: { messages: message } }
+			)
+			.then((result) => {})
+			.catch((e) => {
+				console.error(e, 'error in db catch');
+			});
+	});
 });
 
 http.listen(port, () => {

@@ -38,7 +38,7 @@ const Menu = ({ rooms, setRooms, username }) => {
 	};
 	return (
 		<aside className="Menu">
-			<h1>Hello {username}</h1>
+			<h1>Hello</h1>
 			<form onSubmit={create} className="Menu__form">
 				<input
 					type="text"

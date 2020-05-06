@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-// import io from 'socket.io-client';
+import io from 'socket.io-client';
 import Axios from 'axios';
-// let socket = io('localhost:8000');
+let socket = io('localhost:8000');
 
 const Room = ({ username }) => {
 	const [ messages, setMessages ] = useState([]);
@@ -11,7 +11,6 @@ const Room = ({ username }) => {
 	const scrollRef = useRef(null);
 
 	const { userId, roomId } = useParams();
-	console.log(userId);
 
 	useEffect(
 		() => {
@@ -19,48 +18,48 @@ const Room = ({ username }) => {
 			setMessages([]);
 			Axios.get(`/user/${userId}/room/${roomId}`).then((response) => {
 				console.log(response.data.messages, 'AXIOS GET');
-				// setOldMessages(response.data.messages);
+				setOldMessages(response.data.messages);
 			});
-			// socket.emit('join', { username, roomId }, (response) => {
-			// 	console.log(response, 'SOCKET EMIT JOIN');
-			// });
+			socket.emit('join', { username, roomId }, (response) => {
+				console.log(response, 'SOCKET EMIT JOIN');
+			});
 		},
 		[ roomId, userId, username ]
 	);
 
-	// useEffect(() => {
-	// 	socket.on('message', (data) => {
-	// 		setMessages((messages) => {
-	// 			return [ ...messages, data ];
-	// 		});
-	// 	});
-	// }, []);
+	useEffect(() => {
+		socket.on('message', (data) => {
+			setMessages((messages) => {
+				return [ ...messages, data ];
+			});
+		});
+	}, []);
 
-	// const send = (e) => {
-	// 	e.preventDefault();
+	const send = (e) => {
+		e.preventDefault();
 
-	// 	if (message.length >= 1) {
-	// 		socket.emit('new_message', {
-	// 			user: username,
-	// 			content: message,
-	// 			roomId: roomId
-	// 		});
-	// 		setMessages((messages) => [
-	// 			...messages,
-	// 			{
-	// 				content: message,
-	// 				user: username
-	// 			}
-	// 		]);
+		if (message.length >= 1) {
+			socket.emit('new_message', {
+				user: username,
+				content: message,
+				roomId: roomId
+			});
+			setMessages((messages) => [
+				...messages,
+				{
+					content: message,
+					user: username
+				}
+			]);
 
-	// 		setMessage('');
-	// 	}
-	// };
+			setMessage('');
+		}
+	};
 
 	if (!roomId) return null;
 	return (
 		<main className="Room">
-			{/* <div className="Room__messages">
+			<div className="Room__messages">
 				{!oldMessages ? null : (
 					oldMessages.map((message, i) => (
 						<p key={i}>
@@ -68,6 +67,7 @@ const Room = ({ username }) => {
 						</p>
 					))
 				)}
+
 				{messages.map((message, i) => (
 					<p key={i}>
 						{message.user}: {message.content}
@@ -84,7 +84,7 @@ const Room = ({ username }) => {
 						setMessage(e.target.value);
 					}}
 				/>
-			</form> */}
+			</form>
 		</main>
 	);
 };

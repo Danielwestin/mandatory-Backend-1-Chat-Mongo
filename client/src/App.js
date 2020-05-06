@@ -9,7 +9,7 @@ export default function App() {
 	return (
 		<Router>
 			<Route path="/" exact component={Login} />
-			<Route path="/:userId" component={Chat} />
+			<Route path="/user/:userId" component={Chat} />
 		</Router>
 	);
 }
